@@ -7,16 +7,27 @@
 mod serial;
 mod vga_buffer;
 
-use core::panic::PanicInfo;
+use core::{arch::asm, panic::PanicInfo};
+
+use toy_os::interrupts;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    println!("Hello, Word!");
+    interrupts::init();
+
+    unsafe { *(0x80 as *mut u64) = 42 };
+    //divide_by_zero();
+    //unsafe { asm!("ud2") };
+    println!("Hello, World!");
 
     #[cfg(test)]
     test_main();
 
     loop {}
+}
+
+fn divide_by_zero() {
+    unsafe { asm!("mov dx, 0; div dx") }
 }
 
 #[cfg(not(test))]
