@@ -8,8 +8,6 @@
 use core::panic::PanicInfo;
 
 pub mod interrupts;
-pub mod serial;
-pub mod vga_buffer;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -36,14 +34,14 @@ where
     T: Fn(),
 {
     fn run(&self) {
-        serial_println!("{}...\t", core::any::type_name::<T>());
+        log::info!("{}...\t", core::any::type_name::<T>());
         self();
-        serial_println!("[OK]");
+        log::info!("[OK]");
     }
 }
 
 pub fn test_runner(tests: &[&dyn Testable]) {
-    serial_println!("Running {} tests", tests.len());
+    log::info!("Running {} tests", tests.len());
     for test in tests {
         test.run();
     }
@@ -51,8 +49,8 @@ pub fn test_runner(tests: &[&dyn Testable]) {
 }
 
 pub fn test_panic_handler(info: &PanicInfo) -> ! {
-    serial_println!("[Failed]\n");
-    serial_println!("Error: {}\n", info);
+    log::info!("[Failed]\n");
+    log::info!("Error: {}\n", info);
     exit_qemu(QemuExitCode::Failed);
     loop {}
 }

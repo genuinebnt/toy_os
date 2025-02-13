@@ -1,44 +1,13 @@
-#![no_std]
-#![no_main]
-#![feature(custom_test_frameworks)]
-#![test_runner(toy_os::test_runner)]
-#![reexport_test_harness_main = "test_main"]
+use std::{env, fs};
 
-mod serial;
-mod vga_buffer;
+fn main() {
+    let current_exe = env::current_exe().unwrap();
+    let uefi_target = current_exe.with_file_name("uefi.img");
+    let bios_target = current_exe.with_file_name("bios.img");
 
-use core::{arch::asm, panic::PanicInfo};
+    fs::copy(env!("UEFI_IMAGE"), &uefi_target).unwrap();
+    fs::copy(env!("BIOS_IMAGE"), &bios_target).unwrap();
 
-use toy_os::interrupts;
-
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    interrupts::init();
-
-    unsafe { *(0x80 as *mut u64) = 42 };
-    //divide_by_zero();
-    //unsafe { asm!("ud2") };
-    println!("Hello, World!");
-
-    #[cfg(test)]
-    test_main();
-
-    loop {}
-}
-
-fn divide_by_zero() {
-    unsafe { asm!("mov dx, 0; div dx") }
-}
-
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    println!("{}", info);
-    loop {}
-}
-
-#[cfg(test)]
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    toy_os::test_panic_handler(info)
+    println!("UEFI disk image at {}", uefi_target.display());
+    println!("BIOS disk image at {}", bios_target.display());
 }

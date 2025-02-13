@@ -3,8 +3,6 @@ mod idt;
 use core::arch::naked_asm;
 use lazy_static::lazy_static;
 
-use crate::{println, serial_println};
-
 macro_rules! handler {
     ($name: ident) => {{
         #[naked]
@@ -39,7 +37,7 @@ lazy_static! {
         idt.set_handler(0, handler!(divide_by_zero_handler));
         idt.set_handler(6, handler!(invalid_opcode_handler));
         idt.set_handler(14, handler_with_error_code!(page_fault_handler));
-        serial_println!("{:#?}", idt);
+        log::info!("{:#?}", idt);
         idt
     };
 }
@@ -55,12 +53,12 @@ struct ExceptionStackFrame {
 }
 
 extern "C" fn divide_by_zero_handler(stack_frame: &ExceptionStackFrame) -> ! {
-    println!("\nEXCEPTION: DIVIDE BY ZERO\n{:#?}", stack_frame);
+    log::info!("\nEXCEPTION: DIVIDE BY ZERO\n{:#?}", stack_frame);
     loop {}
 }
 
 extern "C" fn invalid_opcode_handler(stack_frame: &ExceptionStackFrame) -> ! {
-    println!(
+    log::info!(
         "\nEXCEPTION: INVALID OPCODE AT {:#x}\n{:#?}",
         stack_frame.instruction_pointer, stack_frame
     );
@@ -68,7 +66,7 @@ extern "C" fn invalid_opcode_handler(stack_frame: &ExceptionStackFrame) -> ! {
 }
 
 extern "C" fn page_fault_handler(stack_frame: &ExceptionStackFrame, error_code: u64) -> ! {
-    println!(
+    log::info!(
         "\nEXCEPTION: PAGE FAULT WITH ERROR CODE {:?}\n{:#?}",
         error_code, stack_frame
     );
